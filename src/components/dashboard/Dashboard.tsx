@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { DndContext, DragEndEvent, DragOverEvent } from '@dnd-kit/core';
 import { SemesterGrid } from "./SemesterGrid";
 import { Draggable } from '../dnd/Draggable';
@@ -46,6 +46,9 @@ export function Dashboard() {
 
   // Search to filter the courses
   const [searchQuery, setSearchQuery] = useState<string>("");
+  
+  //filtered items for the search query
+  const [filteredItems, setFilteredItems] = useState<Items>(items);
 
   function handleDragEnd(event: DragEndEvent): void {
     const { active, over } = event;
@@ -99,6 +102,17 @@ export function Dashboard() {
     }
   }
 
+  // use effect to update items when searching
+  useEffect(() => {
+    if (searchQuery.length > 0) {
+      setFilteredItems(
+        {...items, "course-inventory": items["course-inventory"].filter((item: Course) => item.name.toLowerCase().includes(searchQuery))}
+      )
+    } else {
+      setFilteredItems(items)
+    }
+  }, [searchQuery])
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -125,25 +139,21 @@ export function Dashboard() {
                     Available Courses
                   </h2>
                   <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full text-sm font-medium text-center">
-                    {items['course-inventory'].length} courses
+                    {filteredItems['course-inventory'].length} courses
                   </span>
-                  {items['course-inventory'].length === 0 ? (
-                    null
-                  ) : (
                     <div className="lg:flex items-center text-sm gap-2 border border-gray-300 px-3 rounded-full">
                       <input className="py-1.5 w-full bg-transparent outline-none placeholder-gray-500" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} type="text" placeholder="Search Courses..." />
                     </div>
-                  )}
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3 overflow-x-hidden overflow-y-auto max-h-[75vh]">
-                  {items['course-inventory'].length === 0 ? (
+                  {filteredItems['course-inventory'].length === 0 ? (
                     <div className="col-span-full text-center py-8">
                       <div className="text-4xl mb-2">🎉</div>
                       <p className="text-gray-500 text-lg">All courses have been scheduled!</p>
                     </div>
                   ) : (
-                    items['course-inventory'].map((course: Course) => (
+                    filteredItems['course-inventory'].map((course: Course) => (
                       <Draggable key={course.id} id={course.id}>
                         <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing">
                           <div className="font-medium text-gray-900 text-sm leading-tight">
